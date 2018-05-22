@@ -1,0 +1,116 @@
+#include <gps.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <math.h>
+
+int main() {
+int rc;
+struct timeval tv;
+double time_in_mill;
+
+struct gps_data_t gps_data;
+
+/*gps_send(&gps_data,"?DEVICES={\"class\":\"DEVICES\",\"devices\":[{\"class\":\"DEVICE\",\"cycle\":0.250}]}\r\n");
+printf("Final: ndevices: %d, path = %s, baud rate = %u, cycle = %f (min %f), driver = %s (mode = %d), activated = %f\n",
+		    		    					gps_data.devices.ndevices,gps_data.devices.list[0].path,gps_data.devices.list[0].baudrate,gps_data.devices.list[0].cycle,
+		    								gps_data.devices.list[0].mincycle,gps_data.devices.list[0].driver,gps_data.devices.list[0].driver_mode,gps_data.devices.list[0].activated);*/
+
+
+if ((rc = gps_open("localhost", "2947", &gps_data)) == -1) {
+    printf("code: %d, reason: %s\n", rc, gps_errstr(rc));
+    return EXIT_FAILURE;
+}
+
+//gps_send(&gps_data,"?DEVICES={\"class\":\"DEVICES\",\"devices\":[{\"class\":\"DEVICE\",\"cycle\":0.250}]}\r\n");
+
+gps_send(&gps_data,"?DEVICE={\"path\":\"/dev/ttyACM0\",\"cycle\":0.800}\r\n"); //IMPORTANT
+
+//gps_stream(&gps_data, WATCH_ENABLE | WATCH_JSON, NULL);
+gps_stream(&gps_data, WATCH_ENABLE | WATCH_JSON, "/dev/ttyACM0");
+
+/*if (gps_send(&gps_data,"?DEVICES={\"class\":\"DEVICES\",\"devices\":[{\"class\":\"DEVICE\",\"cycle\":0.250}]}\r\n") == 0)
+		printf("OK\n");*/
+
+
+/*printf("Before: Release: %d, path = %s",gps_data.devices.ndevices,gps_data.devices.list[0].path);
+	if (gps_send(&gps_data,"?DEVICE\r\n") == 0)
+		printf("Device: Baud rate: %u, path = %s\n",gps_data.dev.baudrate,gps_data.dev.path);*/
+/*for(int a=0;a<5;a++) {
+	if (gps_waiting (&gps_data, 10000))
+		if (gps_send(&gps_data,"?DEVICES={\"class\":\"DEVICES\",\"devices\":[{\"class\":\"DEVICE\",\"path\":\"/dev/ttyACM0\"}]}\r\n") == 0)
+			//gps_stream(&gps_data,"?DEVICES={\"class\":\"DEVICES\"}\r\n");
+			printf("After: Release: %d, path = %s\n",gps_data.devices.ndevices,gps_data.devices.list[0].path);
+	usleep(1000000);
+}*/
+
+int i=0;
+while (1) {
+	//printf("Time: %lu. ", (unsigned long)time(NULL));
+
+	gettimeofday(&tv, NULL);
+	time_in_mill = (tv.tv_sec) * 1000LL + (tv.tv_usec) / 1000 ;
+
+	//LA: there must be a correlation between the times used by gps_waiting and usleep
+	//check whether there is new data from the daemon (max time to wait in microseconds) on input before returning
+    if (gps_waiting (&gps_data, 250000)) {
+
+        /* read data */
+        if ((rc = gps_read(&gps_data)) == -1) {
+            printf("error occured reading gps data. code: %d, reason: %s\n", rc, gps_errstr(rc));
+        } else {
+            /* Display data from the GPS receiver. */
+            if ((gps_data.status == STATUS_FIX) && 
+                (gps_data.fix.mode == MODE_2D || gps_data.fix.mode == MODE_3D) &&
+                !isnan(gps_data.fix.latitude) && 
+                !isnan(gps_data.fix.longitude)) {
+                    //gettimeofday(&tv, NULL); EDIT: tv.tv_sec isn't actually the timestamp!
+                    //printf("latitude: %f, longitude: %f, speed: %f, timestamp: %lf\n", gps_data.fix.latitude, gps_data.fix.longitude, gps_data.fix.speed, gps_data.fix.time); //EDIT: Replaced tv.tv_sec with gps_data.fix.time
+            	printf("%.3f ms - ",time_in_mill/1000);
+            	printf("[%d][%s][%s] %0.lf [+/-%.3f]. %d rcvd bytes. Coord: (%f, %f) [+/-%.3fm,+/-%.3fm], speed: %.3f, ",
+            			i,(gps_data.status == 0)? "NO_FIX" : "FIX",(gps_data.fix.mode == MODE_2D)? "MODE_2D" : ((gps_data.fix.mode == MODE_3D)? "MODE_3D" :((gps_data.fix.mode == MODE_NO_FIX)? "MODE_NO_FIX" : "MODE_NOT_SEEN")),
+						gps_data.fix.time,gps_data.fix.ept,rc,gps_data.fix.latitude, gps_data.fix.longitude,gps_data.fix.epy,gps_data.fix.epx, gps_data.fix.speed);
+            	printf("n_sat = %d of %d\n", gps_data.satellites_used,gps_data.satellites_visible);
+            } else {
+            	//printf("Clocktime: %lu (%.3f ms). ", (unsigned long)time(NULL),time_in_mill/1000);
+            	printf("%.3f ms - ",time_in_mill/1000);
+                printf("[%d][%s][%s] %d rcvd bytes. No GPS data available. timestamp: %lf, n_sat_used = %d of %d, ",i,(gps_data.status == 0)? "NO_FIX" : "FIX",
+                		(gps_data.fix.mode == MODE_2D)? "MODE_2D" : ((gps_data.fix.mode == MODE_3D)? "MODE_3D" :((gps_data.fix.mode == MODE_NO_FIX)? "MODE_NO_FIX" : "MODE_NOT_SEEN")),
+                				rc,gps_data.fix.time,gps_data.satellites_used,gps_data.satellites_visible);
+                printf("latitude: %f, longitude: %f, speed: %f\n", gps_data.fix.latitude, gps_data.fix.longitude, gps_data.fix.speed); //EDIT: Replaced tv.tv_sec with gps_data.fix.time
+            }
+        }
+    } else {
+    	printf("gps_waiting condition not fulfilled. gpsd deamon does not have any new data\n");
+    }
+
+    /*if (gps_send(&gps_data,"?DEVICES={\"class\":\"DEVICES\"}\r\n") == 0 && i<2)
+    			printf("Final: Release: %d, path = %s, baud rate = %u, cycle = %f (min %f), driver = %s (mode = %d)\n",
+    					gps_data.devices.ndevices,gps_data.devices.list[0].path,gps_data.devices.list[0].baudrate,gps_data.devices.list[0].cycle,
+						gps_data.devices.list[0].mincycle,gps_data.devices.list[0].driver,gps_data.devices.list[0].driver_mode);*/
+
+	if ( i==30 || i == 50) {
+		//gps_send(&gps_data,"?DEVICES\n");
+		printf("Final: ndevices: %d, path = %s, baud rate = %u, cycle = %f (min %f), driver = %s (mode = %d), activated = %f\n",
+		    		    					gps_data.devices.ndevices,gps_data.devices.list[0].path,gps_data.devices.list[0].baudrate,gps_data.devices.list[0].cycle,
+		    								gps_data.devices.list[0].mincycle,gps_data.devices.list[0].driver,gps_data.devices.list[0].driver_mode,gps_data.devices.list[0].activated);
+	}
+
+	//if (i>=40 && i<=45) {
+	if ( i==30 || i == 50) {
+		//gps_send(&gps_data,"?DEVICES={\"class\":\"DEVICES\",\"devices\":[{\"class\":\"DEVICE\",\"cycle\":0.250}]}\r\n");
+		//gps_send(&gps_data,"?DEVICES={\"class\":\"DEVICES\",\"devices\":[{\"class\":\"DEVICE\",\"cycle\":0.250}]}\r\n");
+		//gps_send(&gps_data,"?DEVICE\r\n");
+		printf("Device: Baud rate: %u, path = %s, cycle = %.3f (min = %f)\n",gps_data.dev.baudrate,gps_data.dev.path,gps_data.dev.cycle,gps_data.dev.mincycle);
+	}
+
+    usleep(250000);
+    i++;
+}
+
+/* When you are done... */
+gps_stream(&gps_data, WATCH_DISABLE, "/dev/ttyACM0");
+gps_close (&gps_data);
+
+return EXIT_SUCCESS;
+}
