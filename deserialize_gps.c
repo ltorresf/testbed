@@ -8,6 +8,7 @@
 
 void dump_gps_data(GpsData **gps_data,int n_data);
 void dump_rxpwrlvl_data(RssiData *rssi_data);
+void dump_rxpwrlvl_gps(GpsData **gps_data,RssiData *rssi_container);
 
 static size_t read_buffer (FILE *fileptr,unsigned max_length, uint8_t *out)
 {
@@ -57,17 +58,33 @@ int main (int argc, const char * argv[])
   GpsData **gps_data = msg->gps_data;
   RssiData *rssi_container = msg->rssi_container;
 
-  dump_gps_data(gps_data,msg->n_gps_data);
-  dump_rxpwrlvl_data(rssi_container);
+  //dump_gps_data(gps_data,msg->n_gps_data);
+  //dump_rxpwrlvl_data(rssi_container);
+  dump_rxpwrlvl_gps(gps_data,rssi_container);
 
   // Free the unpacked message
   gps_info__free_unpacked(msg, NULL);
   return 0;
 }
 
+void dump_rxpwrlvl_gps(GpsData **gps_data,RssiData *rssi_container) {
+	for(int j=0;j<rssi_container->n_rssi_data;j++){
+
+		printf("[%03d|%03d] [GPS] %.3lf [%s][%s] %.3lf Coord: (%f,%f), Speed: %.3f, [%d/%d]. ",j+1,(int)rssi_container->n_rssi_data,gps_data[j]->gps_unix_time,
+					(gps_data[j]->status == 0)? "NO_FIX" : "FIX",(gps_data[j]->gps_fix->mode == MODE_2D)? "MODE_2D" : ((gps_data[j]->gps_fix->mode == MODE_3D)? "MODE_3D" :((gps_data[j]->gps_fix->mode == MODE_NO_FIX)? "MODE_NO_FIX" : "MODE_NOT_SEEN")),
+					gps_data[j]->gps_fix->time,gps_data[j]->gps_fix->latitude, gps_data[j]->gps_fix->longitude, gps_data[j]->gps_fix->speed,
+					gps_data[j]->satellites_used,gps_data[j]->satellites_visible);
+
+		printf("[RxPwrLvl] %.3f. Rx Power [dB]: ",rssi_container->rssi_data[j]->rssi_unix_time);
+		for(int freq_id=0;freq_id<4;freq_id++)
+			printf("%.1f | ",rssi_container->rssi_data[j]->rssi_val[freq_id]);
+		printf("\n");
+	}
+}
+
 void dump_gps_data(GpsData **gps_data,int n_data) {
 	for(int h=0;h<n_data;h++){
-		printf("[GPS][%s][%s] %.3lf [+/-%.0f ms]. Coord: (%f, %f) [+/-%.3fm,+/-%.3fm], speed: %.3f, ",
+		printf("%.3lf [GPS][%s][%s] %.3lf [+/-%.0f ms]. Coord: (%f, %f) [+/-%.3fm,+/-%.3fm], speed: %.3f, ",gps_data[h]->gps_unix_time,
 					(gps_data[h]->status == 0)? "NO_FIX" : "FIX",(gps_data[h]->gps_fix->mode == MODE_2D)? "MODE_2D" : ((gps_data[h]->gps_fix->mode == MODE_3D)? "MODE_3D" :((gps_data[h]->gps_fix->mode == MODE_NO_FIX)? "MODE_NO_FIX" : "MODE_NOT_SEEN")),
 					gps_data[h]->gps_fix->time,1000*gps_data[h]->gps_fix->ept,gps_data[h]->gps_fix->latitude, gps_data[h]->gps_fix->longitude,gps_data[h]->gps_fix->epy,gps_data[h]->gps_fix->epx, gps_data[h]->gps_fix->speed);
 		printf("n_sat = %d of %d\n", gps_data[h]->satellites_used,gps_data[h]->satellites_visible);
@@ -79,9 +96,9 @@ void dump_gps_data(GpsData **gps_data,int n_data) {
 void dump_rxpwrlvl_data(RssiData *rssi_container) {
 	for(int j=0;j<rssi_container->n_rssi_data;j++){
 
-		printf("[RxPwrLvl] Sample %d of %d. Rx Power [dB]: ",j+1,(int)rssi_container->n_rssi_data);
+		printf("[RxPwrLvl] Tunix = %.3f. Sample %d of %d. Rx Power [dB]: ",rssi_container->rssi_data[j]->rssi_unix_time,j+1,(int)rssi_container->n_rssi_data);
 		for(int freq_id=0;freq_id<4;freq_id++)
-			printf("%d | ",rssi_container->rssi_data[j]->lte_data[freq_id]);
+			printf("%.1f | ",rssi_container->rssi_data[j]->rssi_val[freq_id]);
 		printf("\n");
 	}
 

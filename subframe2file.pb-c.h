@@ -19,6 +19,7 @@ typedef struct _GpsFix GpsFix;
 typedef struct _GpsData GpsData;
 typedef struct _GpsInfo GpsInfo;
 typedef struct _RssiData RssiData;
+typedef struct _RssiVal RssiVal;
 typedef struct _PhichConfigCommon PhichConfigCommon;
 typedef struct _PhichReg PhichReg;
 typedef struct _Frameparms Frameparms;
@@ -109,10 +110,11 @@ struct  _GpsData
   int32_t status;
   int32_t satellites_used;
   int32_t satellites_visible;
+  double gps_unix_time;
 };
 #define GPS_DATA__INIT \
  { PROTOBUF_C_MESSAGE_INIT (&gps_data__descriptor) \
-    , NULL, 0, 0, 0 }
+    , NULL, 0, 0, 0, 0 }
 
 
 struct  _GpsInfo
@@ -131,11 +133,23 @@ struct  _RssiData
 {
   ProtobufCMessage base;
   size_t n_rssi_data;
-  LteData **rssi_data;
+  RssiVal **rssi_data;
 };
 #define RSSI_DATA__INIT \
  { PROTOBUF_C_MESSAGE_INIT (&rssi_data__descriptor) \
     , 0,NULL }
+
+
+struct  _RssiVal
+{
+  ProtobufCMessage base;
+  size_t n_rssi_val;
+  double *rssi_val;
+  double rssi_unix_time;
+};
+#define RSSI_VAL__INIT \
+ { PROTOBUF_C_MESSAGE_INIT (&rssi_val__descriptor) \
+    , 0,NULL, 0 }
 
 
 struct  _PhichConfigCommon
@@ -614,6 +628,25 @@ RssiData *
 void   rssi_data__free_unpacked
                      (RssiData *message,
                       ProtobufCAllocator *allocator);
+/* RssiVal methods */
+void   rssi_val__init
+                     (RssiVal         *message);
+size_t rssi_val__get_packed_size
+                     (const RssiVal   *message);
+size_t rssi_val__pack
+                     (const RssiVal   *message,
+                      uint8_t             *out);
+size_t rssi_val__pack_to_buffer
+                     (const RssiVal   *message,
+                      ProtobufCBuffer     *buffer);
+RssiVal *
+       rssi_val__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data);
+void   rssi_val__free_unpacked
+                     (RssiVal *message,
+                      ProtobufCAllocator *allocator);
 /* PhichConfigCommon methods */
 void   phich_config_common__init
                      (PhichConfigCommon         *message);
@@ -818,6 +851,9 @@ typedef void (*GpsInfo_Closure)
 typedef void (*RssiData_Closure)
                  (const RssiData *message,
                   void *closure_data);
+typedef void (*RssiVal_Closure)
+                 (const RssiVal *message,
+                  void *closure_data);
 typedef void (*PhichConfigCommon_Closure)
                  (const PhichConfigCommon *message,
                   void *closure_data);
@@ -859,6 +895,7 @@ extern const ProtobufCEnumDescriptor    gps_fix__mode__descriptor;
 extern const ProtobufCMessageDescriptor gps_data__descriptor;
 extern const ProtobufCMessageDescriptor gps_info__descriptor;
 extern const ProtobufCMessageDescriptor rssi_data__descriptor;
+extern const ProtobufCMessageDescriptor rssi_val__descriptor;
 extern const ProtobufCMessageDescriptor phich_config_common__descriptor;
 extern const ProtobufCEnumDescriptor    phich_config_common__phich_duration__descriptor;
 extern const ProtobufCEnumDescriptor    phich_config_common__phich_resource__descriptor;

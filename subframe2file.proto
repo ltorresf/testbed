@@ -45,6 +45,7 @@ message GpsData {
 	required int32 status = 2;
 	required int32 satellites_used = 3;
 	required int32 satellites_visible = 4;
+	required double gps_unix_time = 5;
 }
 
 message GpsInfo {
@@ -53,7 +54,12 @@ message GpsInfo {
 }
 
 message RssiData {
-	repeated LteData rssi_data = 1;
+	repeated RssiVal rssi_data = 1;
+}
+
+message RssiVal {
+	repeated double rssi_val = 1;
+	required double rssi_unix_time = 2;
 }
 
 message PhichConfigCommon {
