@@ -7,6 +7,7 @@
 
 
 void dump_gps_data(GpsData **gps_data,int n_data);
+void dump_rxpwrlvl_data(RssiData *rssi_data);
 
 static size_t read_buffer (FILE *fileptr,unsigned max_length, uint8_t *out)
 {
@@ -53,11 +54,11 @@ int main (int argc, const char * argv[])
     exit(1);
   }
 
-  //GpsInfo *gps_info = msg;
   GpsData **gps_data = msg->gps_data;
-  //GpsFix **gps_fix = msg->gps_fix;
+  RssiData *rssi_container = msg->rssi_container;
 
   dump_gps_data(gps_data,msg->n_gps_data);
+  dump_rxpwrlvl_data(rssi_container);
 
   // Free the unpacked message
   gps_info__free_unpacked(msg, NULL);
@@ -73,4 +74,15 @@ void dump_gps_data(GpsData **gps_data,int n_data) {
 	}
 
 	return;
+}
+
+void dump_rxpwrlvl_data(RssiData *rssi_container) {
+	for(int j=0;j<rssi_container->n_rssi_data;j++){
+
+		printf("[RxPwrLvl] Sample %d of %d. Rx Power [dB]: ",j+1,(int)rssi_container->n_rssi_data);
+		for(int freq_id=0;freq_id<4;freq_id++)
+			printf("%d | ",rssi_container->rssi_data[j]->lte_data[freq_id]);
+		printf("\n");
+	}
+
 }

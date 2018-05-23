@@ -49,6 +49,11 @@ message GpsData {
 
 message GpsInfo {
 	repeated GpsData gps_data = 1;
+	required RssiData rssi_container = 2;
+}
+
+message RssiData {
+	repeated LteData rssi_data = 1;
 }
 
 message PhichConfigCommon {

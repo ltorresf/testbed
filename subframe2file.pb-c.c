@@ -142,6 +142,51 @@ void   gps_info__free_unpacked
   assert(message->base.descriptor == &gps_info__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
+void   rssi_data__init
+                     (RssiData         *message)
+{
+  static const RssiData init_value = RSSI_DATA__INIT;
+  *message = init_value;
+}
+size_t rssi_data__get_packed_size
+                     (const RssiData *message)
+{
+  assert(message->base.descriptor == &rssi_data__descriptor);
+  return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
+}
+size_t rssi_data__pack
+                     (const RssiData *message,
+                      uint8_t       *out)
+{
+  assert(message->base.descriptor == &rssi_data__descriptor);
+  return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
+}
+size_t rssi_data__pack_to_buffer
+                     (const RssiData *message,
+                      ProtobufCBuffer *buffer)
+{
+  assert(message->base.descriptor == &rssi_data__descriptor);
+  return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
+}
+RssiData *
+       rssi_data__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data)
+{
+  return (RssiData *)
+     protobuf_c_message_unpack (&rssi_data__descriptor,
+                                allocator, len, data);
+}
+void   rssi_data__free_unpacked
+                     (RssiData *message,
+                      ProtobufCAllocator *allocator)
+{
+  if(!message)
+    return;
+  assert(message->base.descriptor == &rssi_data__descriptor);
+  protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
+}
 void   phich_config_common__init
                      (PhichConfigCommon         *message)
 {
@@ -921,7 +966,7 @@ const ProtobufCMessageDescriptor gps_data__descriptor =
   (ProtobufCMessageInit) gps_data__init,
   NULL,NULL,NULL    /* reserved[123] */
 };
-static const ProtobufCFieldDescriptor gps_info__field_descriptors[1] =
+static const ProtobufCFieldDescriptor gps_info__field_descriptors[2] =
 {
   {
     "gps_data",
@@ -935,14 +980,27 @@ static const ProtobufCFieldDescriptor gps_info__field_descriptors[1] =
     0,             /* flags */
     0,NULL,NULL    /* reserved1,reserved2, etc */
   },
+  {
+    "rssi_container",
+    2,
+    PROTOBUF_C_LABEL_REQUIRED,
+    PROTOBUF_C_TYPE_MESSAGE,
+    0,   /* quantifier_offset */
+    offsetof(GpsInfo, rssi_container),
+    &rssi_data__descriptor,
+    NULL,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
 };
 static const unsigned gps_info__field_indices_by_name[] = {
   0,   /* field[0] = gps_data */
+  1,   /* field[1] = rssi_container */
 };
 static const ProtobufCIntRange gps_info__number_ranges[1 + 1] =
 {
   { 1, 0 },
-  { 0, 1 }
+  { 0, 2 }
 };
 const ProtobufCMessageDescriptor gps_info__descriptor =
 {
@@ -952,11 +1010,49 @@ const ProtobufCMessageDescriptor gps_info__descriptor =
   "GpsInfo",
   "",
   sizeof(GpsInfo),
-  1,
+  2,
   gps_info__field_descriptors,
   gps_info__field_indices_by_name,
   1,  gps_info__number_ranges,
   (ProtobufCMessageInit) gps_info__init,
+  NULL,NULL,NULL    /* reserved[123] */
+};
+static const ProtobufCFieldDescriptor rssi_data__field_descriptors[1] =
+{
+  {
+    "rssi_data",
+    1,
+    PROTOBUF_C_LABEL_REPEATED,
+    PROTOBUF_C_TYPE_MESSAGE,
+    offsetof(RssiData, n_rssi_data),
+    offsetof(RssiData, rssi_data),
+    &lte_data__descriptor,
+    NULL,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+};
+static const unsigned rssi_data__field_indices_by_name[] = {
+  0,   /* field[0] = rssi_data */
+};
+static const ProtobufCIntRange rssi_data__number_ranges[1 + 1] =
+{
+  { 1, 0 },
+  { 0, 1 }
+};
+const ProtobufCMessageDescriptor rssi_data__descriptor =
+{
+  PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
+  "RssiData",
+  "RssiData",
+  "RssiData",
+  "",
+  sizeof(RssiData),
+  1,
+  rssi_data__field_descriptors,
+  rssi_data__field_indices_by_name,
+  1,  rssi_data__number_ranges,
+  (ProtobufCMessageInit) rssi_data__init,
   NULL,NULL,NULL    /* reserved[123] */
 };
 static const ProtobufCEnumValue phich_config_common__phich_duration__enum_values_by_number[2] =
