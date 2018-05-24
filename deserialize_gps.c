@@ -76,7 +76,7 @@ void dump_rxpwrlvl_gps(GpsData **gps_data,RssiData *rssi_container) {
 					gps_data[j]->satellites_used,gps_data[j]->satellites_visible);
 
 		printf("[RxPwrLvl] %.3f. Rx Power [dB]: ",rssi_container->rssi_data[j]->rssi_unix_time);
-		for(int freq_id=0;freq_id<4;freq_id++)
+		for(int freq_id=0;freq_id<35;freq_id++)
 			printf("%.1f | ",rssi_container->rssi_data[j]->rssi_val[freq_id]);
 		printf("\n");
 	}
