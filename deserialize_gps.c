@@ -5,8 +5,11 @@
 #include "gps.h"
 #include <math.h>
 
-#define MAX_MSG_SIZE 2097152
-#define BAND_AVERAGES 1
+//#define MAX_MSG_SIZE 2192121
+unsigned int max_msg_size = 40192121;
+#define BAND_AVERAGES 0
+#define BAND_SCAN 1
+#define MATLAB 0
 
 
 void dump_gps_data(GpsData **gps_data,int n_data);
@@ -37,7 +40,8 @@ int main (int argc, const char * argv[])
 	GpsInfo *msg;
 
   // Read packed message from standard-input.
-  uint8_t buf[MAX_MSG_SIZE];
+  uint8_t *buf;
+  buf = malloc(max_msg_size*sizeof(uint8_t));
 
   FILE *fileptr,*list_filenames;
   char *filename = NULL;
@@ -65,7 +69,7 @@ int main (int argc, const char * argv[])
       	  printf("Error! Could not open file %s\n",filename);
       	  exit(-1); // must include stdlib.h
       	}
-      size_t msg_len = read_buffer(fileptr,MAX_MSG_SIZE, buf);
+      size_t msg_len = read_buffer(fileptr,max_msg_size, buf);
       //printf("File size = %lu kB\n",msg_len/1024);
       fclose(fileptr);
 
@@ -82,9 +86,9 @@ int main (int argc, const char * argv[])
 
       //dump_gps_data(gps_data,msg->n_gps_data);
       //dump_rxpwrlvl_data(rssi_container);
-      //dump_rxpwrlvl_gps(gps_data,rssi_container);
+      dump_rxpwrlvl_gps(gps_data,rssi_container);
 
-      arcgis_input_generator(msg);
+      //arcgis_input_generator(msg); //FIXME: incongruent values with last update
 
       // Free the unpacked message
       gps_info__free_unpacked(msg, NULL);
@@ -135,9 +139,24 @@ void arcgis_input_generator(GpsInfo *gps_info) {
 
 		//printf("|| GPS Sample No %d, GPS Unix Timestamp = %.3f >> Time diff = %.3f || GPS Timestamp = %.3lf ||\n",gps_ix,gps_data[gps_ix]->gps_unix_time,tmp,gps_data[gps_ix]->gps_fix->time);
 
+#ifdef BAND_SCAN		//ArcGIS: latest. the Rx signal level for the band is calculated in C
+
+		//printing out GPS data
+		frac_time = modf(gps_data[gps_ix]->gps_fix->time,&tmp2);
+		snprintf(frac_buf, 10, "%f\n", frac_time);
+		int_time = tmp2;
+
+		ts = *localtime(&int_time);
+		strftime(timestamp_buf, sizeof(timestamp_buf), "%a %Y-%m-%d %H:%M:%S", &ts);
+		strftime(timestamp_buf2, sizeof(timestamp_buf2), "%Z", &ts);
+		printf("%s.%c %s,%.6f,%.6f,%.1f km/h,",timestamp_buf,frac_buf[2],timestamp_buf2,gps_data[gps_ix]->gps_fix->latitude,gps_data[gps_ix]->gps_fix->longitude,18*(gps_data[gps_ix]->gps_fix->speed)/5);
+
+		//printing out RSSI data (in dB) -> B20, B3, B7
+		printf("%.1f,%.1f,%.1f\n",rssi_container->rssi_data[rssi_cnt]->rssi_val[0],rssi_container->rssi_data[rssi_cnt]->rssi_val[1],rssi_container->rssi_data[rssi_cnt]->rssi_val[2]);
+#endif
 
 
-#ifdef BAND_AVERAGES		//ArcGIS
+#ifdef BAND_AVERAGES		//ArcGIS: 5-MHz channels are used for calculating the Rx Signal level
 
 		//printing out GPS data
 		frac_time = modf(gps_data[gps_ix]->gps_fix->time,&tmp2);
@@ -163,7 +182,9 @@ void arcgis_input_generator(GpsInfo *gps_info) {
 			b7+=rssi_container->rssi_data[rssi_cnt]->rssi_val[freq_id];
 
 		printf("%.1f,%.1f,%.1f\n",b20/2,b3/4,b7/4);
-#else	//MATLAB
+#endif
+
+#ifdef MATLAB	//MATLAB
 
 		//printing out GPS data
 		printf("%.1f,%.6f,%.6f,%.1f,",gps_data[gps_ix]->gps_fix->time,gps_data[gps_ix]->gps_fix->latitude,gps_data[gps_ix]->gps_fix->longitude,gps_data[gps_ix]->gps_fix->speed);
@@ -190,7 +211,7 @@ void dump_rxpwrlvl_gps(GpsData **gps_data,RssiData *rssi_container) {
 					(gps_data[j]->status == 0)? "NO_FIX" : "FIX",(gps_data[j]->gps_fix->mode == MODE_2D)? "MODE_2D" : ((gps_data[j]->gps_fix->mode == MODE_3D)? "MODE_3D" :((gps_data[j]->gps_fix->mode == MODE_NO_FIX)? "MODE_NO_FIX" : "MODE_NOT_SEEN")),
 					gps_data[j]->gps_fix->time,gps_data[j]->gps_fix->latitude, gps_data[j]->gps_fix->longitude, gps_data[j]->gps_fix->speed,
 					gps_data[j]->satellites_used,gps_data[j]->satellites_visible);
-
+#ifndef BAND_AVERAGES
 		//Sequence used to store the RSSI measurements: B20,B7,B3
 		printf("[RxPwrLvl] %.3f. Rx Power [dB]: ",rssi_container->rssi_data[j]->rssi_unix_time);
 		for(int freq_id=0;freq_id<2;freq_id++)
@@ -200,6 +221,13 @@ void dump_rxpwrlvl_gps(GpsData **gps_data,RssiData *rssi_container) {
 		for(int freq_id=2;freq_id<6;freq_id++)
 			printf("%.1f | ",rssi_container->rssi_data[j]->rssi_val[freq_id]);
 		printf("\n");
+#endif
+#ifdef BAND_SCAN
+		printf("[RxPwrLvl] %.3f. Rx Power [dB]: ",rssi_container->rssi_data[j]->rssi_unix_time);
+		for(int freq_id=0;freq_id<3;freq_id++)
+					printf("%.1f | ",rssi_container->rssi_data[j]->rssi_val[freq_id]);
+		printf("\n");
+#endif
 	}
 }
 

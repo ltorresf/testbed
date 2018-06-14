@@ -142,6 +142,96 @@ void   gps_info__free_unpacked
   assert(message->base.descriptor == &gps_info__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
+void   rx_signal__init
+                     (RxSignal         *message)
+{
+  static const RxSignal init_value = RX_SIGNAL__INIT;
+  *message = init_value;
+}
+size_t rx_signal__get_packed_size
+                     (const RxSignal *message)
+{
+  assert(message->base.descriptor == &rx_signal__descriptor);
+  return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
+}
+size_t rx_signal__pack
+                     (const RxSignal *message,
+                      uint8_t       *out)
+{
+  assert(message->base.descriptor == &rx_signal__descriptor);
+  return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
+}
+size_t rx_signal__pack_to_buffer
+                     (const RxSignal *message,
+                      ProtobufCBuffer *buffer)
+{
+  assert(message->base.descriptor == &rx_signal__descriptor);
+  return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
+}
+RxSignal *
+       rx_signal__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data)
+{
+  return (RxSignal *)
+     protobuf_c_message_unpack (&rx_signal__descriptor,
+                                allocator, len, data);
+}
+void   rx_signal__free_unpacked
+                     (RxSignal *message,
+                      ProtobufCAllocator *allocator)
+{
+  if(!message)
+    return;
+  assert(message->base.descriptor == &rx_signal__descriptor);
+  protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
+}
+void   band__init
+                     (Band         *message)
+{
+  static const Band init_value = BAND__INIT;
+  *message = init_value;
+}
+size_t band__get_packed_size
+                     (const Band *message)
+{
+  assert(message->base.descriptor == &band__descriptor);
+  return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
+}
+size_t band__pack
+                     (const Band *message,
+                      uint8_t       *out)
+{
+  assert(message->base.descriptor == &band__descriptor);
+  return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
+}
+size_t band__pack_to_buffer
+                     (const Band *message,
+                      ProtobufCBuffer *buffer)
+{
+  assert(message->base.descriptor == &band__descriptor);
+  return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
+}
+Band *
+       band__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data)
+{
+  return (Band *)
+     protobuf_c_message_unpack (&band__descriptor,
+                                allocator, len, data);
+}
+void   band__free_unpacked
+                     (Band *message,
+                      ProtobufCAllocator *allocator)
+{
+  if(!message)
+    return;
+  assert(message->base.descriptor == &band__descriptor);
+  protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
+}
 void   rssi_data__init
                      (RssiData         *message)
 {
@@ -1024,7 +1114,7 @@ const ProtobufCMessageDescriptor gps_data__descriptor =
   (ProtobufCMessageInit) gps_data__init,
   NULL,NULL,NULL    /* reserved[123] */
 };
-static const ProtobufCFieldDescriptor gps_info__field_descriptors[2] =
+static const ProtobufCFieldDescriptor gps_info__field_descriptors[3] =
 {
   {
     "gps_data",
@@ -1050,15 +1140,28 @@ static const ProtobufCFieldDescriptor gps_info__field_descriptors[2] =
     0,             /* flags */
     0,NULL,NULL    /* reserved1,reserved2, etc */
   },
+  {
+    "rx_signal",
+    3,
+    PROTOBUF_C_LABEL_REPEATED,
+    PROTOBUF_C_TYPE_MESSAGE,
+    offsetof(GpsInfo, n_rx_signal),
+    offsetof(GpsInfo, rx_signal),
+    &rx_signal__descriptor,
+    NULL,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
 };
 static const unsigned gps_info__field_indices_by_name[] = {
   0,   /* field[0] = gps_data */
   1,   /* field[1] = rssi_container */
+  2,   /* field[2] = rx_signal */
 };
 static const ProtobufCIntRange gps_info__number_ranges[1 + 1] =
 {
   { 1, 0 },
-  { 0, 2 }
+  { 0, 3 }
 };
 const ProtobufCMessageDescriptor gps_info__descriptor =
 {
@@ -1068,11 +1171,87 @@ const ProtobufCMessageDescriptor gps_info__descriptor =
   "GpsInfo",
   "",
   sizeof(GpsInfo),
-  2,
+  3,
   gps_info__field_descriptors,
   gps_info__field_indices_by_name,
   1,  gps_info__number_ranges,
   (ProtobufCMessageInit) gps_info__init,
+  NULL,NULL,NULL    /* reserved[123] */
+};
+static const ProtobufCFieldDescriptor rx_signal__field_descriptors[1] =
+{
+  {
+    "band",
+    1,
+    PROTOBUF_C_LABEL_REPEATED,
+    PROTOBUF_C_TYPE_MESSAGE,
+    offsetof(RxSignal, n_band),
+    offsetof(RxSignal, band),
+    &band__descriptor,
+    NULL,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+};
+static const unsigned rx_signal__field_indices_by_name[] = {
+  0,   /* field[0] = band */
+};
+static const ProtobufCIntRange rx_signal__number_ranges[1 + 1] =
+{
+  { 1, 0 },
+  { 0, 1 }
+};
+const ProtobufCMessageDescriptor rx_signal__descriptor =
+{
+  PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
+  "RxSignal",
+  "RxSignal",
+  "RxSignal",
+  "",
+  sizeof(RxSignal),
+  1,
+  rx_signal__field_descriptors,
+  rx_signal__field_indices_by_name,
+  1,  rx_signal__number_ranges,
+  (ProtobufCMessageInit) rx_signal__init,
+  NULL,NULL,NULL    /* reserved[123] */
+};
+static const ProtobufCFieldDescriptor band__field_descriptors[1] =
+{
+  {
+    "signal_samples",
+    1,
+    PROTOBUF_C_LABEL_REPEATED,
+    PROTOBUF_C_TYPE_INT32,
+    offsetof(Band, n_signal_samples),
+    offsetof(Band, signal_samples),
+    NULL,
+    NULL,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+};
+static const unsigned band__field_indices_by_name[] = {
+  0,   /* field[0] = signal_samples */
+};
+static const ProtobufCIntRange band__number_ranges[1 + 1] =
+{
+  { 1, 0 },
+  { 0, 1 }
+};
+const ProtobufCMessageDescriptor band__descriptor =
+{
+  PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
+  "Band",
+  "Band",
+  "Band",
+  "",
+  sizeof(Band),
+  1,
+  band__field_descriptors,
+  band__field_indices_by_name,
+  1,  band__number_ranges,
+  (ProtobufCMessageInit) band__init,
   NULL,NULL,NULL    /* reserved[123] */
 };
 static const ProtobufCFieldDescriptor rssi_data__field_descriptors[1] =

@@ -51,6 +51,15 @@ message GpsData {
 message GpsInfo {
 	repeated GpsData gps_data = 1;
 	required RssiData rssi_container = 2;
+	repeated RxSignal rx_signal = 3;
+}
+
+message RxSignal {
+	repeated Band band = 1;
+}
+
+message Band {
+	repeated int32 signal_samples = 1;
 }
 
 message RssiData {

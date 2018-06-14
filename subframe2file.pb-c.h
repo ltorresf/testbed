@@ -18,6 +18,8 @@ PROTOBUF_C__BEGIN_DECLS
 typedef struct _GpsFix GpsFix;
 typedef struct _GpsData GpsData;
 typedef struct _GpsInfo GpsInfo;
+typedef struct _RxSignal RxSignal;
+typedef struct _Band Band;
 typedef struct _RssiData RssiData;
 typedef struct _RssiVal RssiVal;
 typedef struct _PhichConfigCommon PhichConfigCommon;
@@ -123,10 +125,34 @@ struct  _GpsInfo
   size_t n_gps_data;
   GpsData **gps_data;
   RssiData *rssi_container;
+  size_t n_rx_signal;
+  RxSignal **rx_signal;
 };
 #define GPS_INFO__INIT \
  { PROTOBUF_C_MESSAGE_INIT (&gps_info__descriptor) \
-    , 0,NULL, NULL }
+    , 0,NULL, NULL, 0,NULL }
+
+
+struct  _RxSignal
+{
+  ProtobufCMessage base;
+  size_t n_band;
+  Band **band;
+};
+#define RX_SIGNAL__INIT \
+ { PROTOBUF_C_MESSAGE_INIT (&rx_signal__descriptor) \
+    , 0,NULL }
+
+
+struct  _Band
+{
+  ProtobufCMessage base;
+  size_t n_signal_samples;
+  int32_t *signal_samples;
+};
+#define BAND__INIT \
+ { PROTOBUF_C_MESSAGE_INIT (&band__descriptor) \
+    , 0,NULL }
 
 
 struct  _RssiData
@@ -609,6 +635,44 @@ GpsInfo *
 void   gps_info__free_unpacked
                      (GpsInfo *message,
                       ProtobufCAllocator *allocator);
+/* RxSignal methods */
+void   rx_signal__init
+                     (RxSignal         *message);
+size_t rx_signal__get_packed_size
+                     (const RxSignal   *message);
+size_t rx_signal__pack
+                     (const RxSignal   *message,
+                      uint8_t             *out);
+size_t rx_signal__pack_to_buffer
+                     (const RxSignal   *message,
+                      ProtobufCBuffer     *buffer);
+RxSignal *
+       rx_signal__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data);
+void   rx_signal__free_unpacked
+                     (RxSignal *message,
+                      ProtobufCAllocator *allocator);
+/* Band methods */
+void   band__init
+                     (Band         *message);
+size_t band__get_packed_size
+                     (const Band   *message);
+size_t band__pack
+                     (const Band   *message,
+                      uint8_t             *out);
+size_t band__pack_to_buffer
+                     (const Band   *message,
+                      ProtobufCBuffer     *buffer);
+Band *
+       band__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data);
+void   band__free_unpacked
+                     (Band *message,
+                      ProtobufCAllocator *allocator);
 /* RssiData methods */
 void   rssi_data__init
                      (RssiData         *message);
@@ -848,6 +912,12 @@ typedef void (*GpsData_Closure)
 typedef void (*GpsInfo_Closure)
                  (const GpsInfo *message,
                   void *closure_data);
+typedef void (*RxSignal_Closure)
+                 (const RxSignal *message,
+                  void *closure_data);
+typedef void (*Band_Closure)
+                 (const Band *message,
+                  void *closure_data);
 typedef void (*RssiData_Closure)
                  (const RssiData *message,
                   void *closure_data);
@@ -894,6 +964,8 @@ extern const ProtobufCMessageDescriptor gps_fix__descriptor;
 extern const ProtobufCEnumDescriptor    gps_fix__mode__descriptor;
 extern const ProtobufCMessageDescriptor gps_data__descriptor;
 extern const ProtobufCMessageDescriptor gps_info__descriptor;
+extern const ProtobufCMessageDescriptor rx_signal__descriptor;
+extern const ProtobufCMessageDescriptor band__descriptor;
 extern const ProtobufCMessageDescriptor rssi_data__descriptor;
 extern const ProtobufCMessageDescriptor rssi_val__descriptor;
 extern const ProtobufCMessageDescriptor phich_config_common__descriptor;
