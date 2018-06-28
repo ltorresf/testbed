@@ -1,9 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "subframe2file.pb-c.h"
 #include "variables.h"
 #include "gps.h"
 #include <math.h>
+#include <malloc.h>
+#include "assertions.h"
 
 //#define MAX_MSG_SIZE 2192121
 unsigned int max_msg_size = 40192121;
@@ -11,11 +14,25 @@ unsigned int max_msg_size = 40192121;
 #define BAND_SCAN 1
 #define MATLAB 0
 
-
 void dump_gps_data(GpsData **gps_data,int n_data);
 void dump_rxpwrlvl_data(RssiData *rssi_data);
-void dump_rxpwrlvl_gps(GpsData **gps_data,RssiData *rssi_container);
+void dump_rxpwrlvl_gps(GpsData **gps_data,RssiData *rssi_container,GpsInfo *msg);
 void arcgis_input_generator(GpsInfo *msg);
+extern int write_output(const char *fname,const char *vname,void *data,int length,int dec,char format);
+
+//! \brief Allocate \c size bytes of memory on the heap with alignment 16 and zero it afterwards.
+//! If no more memory is available, this function will terminate the program with an assertion error.
+static inline void* malloc16_clear( size_t size )
+{
+#ifdef __AVX2__
+  void* ptr = memalign(32, size);
+#else
+  void* ptr = memalign(16, size);
+#endif
+  //DevAssert(ptr);
+  memset( ptr, 0, size );
+  return ptr;
+}
 
 static size_t read_buffer (FILE *fileptr,unsigned max_length, uint8_t *out)
 {
@@ -86,7 +103,7 @@ int main (int argc, const char * argv[])
 
       //dump_gps_data(gps_data,msg->n_gps_data);
       //dump_rxpwrlvl_data(rssi_container);
-      dump_rxpwrlvl_gps(gps_data,rssi_container);
+      dump_rxpwrlvl_gps(gps_data,rssi_container,msg);
 
       //arcgis_input_generator(msg); //FIXME: incongruent values with last update
 
@@ -204,14 +221,19 @@ void arcgis_input_generator(GpsInfo *gps_info) {
 	}
 }
 
-void dump_rxpwrlvl_gps(GpsData **gps_data,RssiData *rssi_container) {
-	for(int j=0;j<rssi_container->n_rssi_data;j++){
+void dump_rxpwrlvl_gps(GpsData **gps_data,RssiData *rssi_container,GpsInfo *msg) {
 
-		printf("[%03d|%03d] [GPS] %.3lf [%s][%s] %.3lf Coord: (%f,%f), Speed: %.3f, [%d/%d]. ",j+1,(int)rssi_container->n_rssi_data,gps_data[j]->gps_unix_time,
+	RxSignal **rx_signal = msg->rx_signal;
+//	RssiVal **rssi_data = rssi_container->rssi_data;
+	char filename[50],variable[50];
+
+	for(int j=0;j<msg->n_gps_data;j++){
+		//printf("j = %d, rssi_container->n_rssi_data = %zd, msg->n_gps_data = %zd",j,rssi_container->n_rssi_data,msg->n_gps_data);
+		printf("[%03d|%03d] [GPS] %.2lf [%s][%s] %.2lf \nCoord: (%.4f,%.4f), Speed: %.0f, [%d/%d]. ",j+1,(int)rssi_container->n_rssi_data,gps_data[j]->gps_unix_time,
 					(gps_data[j]->status == 0)? "NO_FIX" : "FIX",(gps_data[j]->gps_fix->mode == MODE_2D)? "MODE_2D" : ((gps_data[j]->gps_fix->mode == MODE_3D)? "MODE_3D" :((gps_data[j]->gps_fix->mode == MODE_NO_FIX)? "MODE_NO_FIX" : "MODE_NOT_SEEN")),
 					gps_data[j]->gps_fix->time,gps_data[j]->gps_fix->latitude, gps_data[j]->gps_fix->longitude, gps_data[j]->gps_fix->speed,
 					gps_data[j]->satellites_used,gps_data[j]->satellites_visible);
-#ifndef BAND_AVERAGES
+#if BAND_AVERAGES
 		//Sequence used to store the RSSI measurements: B20,B7,B3
 		printf("[RxPwrLvl] %.3f. Rx Power [dB]: ",rssi_container->rssi_data[j]->rssi_unix_time);
 		for(int freq_id=0;freq_id<2;freq_id++)
@@ -222,12 +244,32 @@ void dump_rxpwrlvl_gps(GpsData **gps_data,RssiData *rssi_container) {
 			printf("%.1f | ",rssi_container->rssi_data[j]->rssi_val[freq_id]);
 		printf("\n");
 #endif
-#ifdef BAND_SCAN
-		printf("[RxPwrLvl] %.3f. Rx Power [dB]: ",rssi_container->rssi_data[j]->rssi_unix_time);
-		for(int freq_id=0;freq_id<3;freq_id++)
-					printf("%.1f | ",rssi_container->rssi_data[j]->rssi_val[freq_id]);
+#if BAND_SCAN
+
+		if(j < rssi_container->n_rssi_data) {
+			printf("\n[RxPwrLvl] %.2f. Rx Power [dB]: ",rssi_container->rssi_data[j]->rssi_unix_time);
+			for(int freq_id=0;freq_id<3;freq_id++)
+				printf("%.1f|",rssi_container->rssi_data[j]->rssi_val[freq_id]);
+			printf(" [Gain][dB]: ");
+			for(int freq_id=0;freq_id<3;freq_id++)
+				printf("%.1f|",rssi_container->rssi_data[j]->rx_gain_level[freq_id]);
+		} else {
+			printf("[RxPwrLvl] not available. [Gain] not available.");
+		}
 		printf("\n");
 #endif
+	}
+	//creating MATLAB files that contain time-domain signals
+	for (int s=0; s<msg->n_rx_signal; s++) {
+		for(int b=0;b<rx_signal[s]->n_band;b++){
+			snprintf(filename,50,"%s%d%s%d%s","rx_signal",s+1,"_band_",b+1,".m");
+			snprintf(variable,50,"%s%d%s%d","rx_signal",s+1,"_b_",b+1);
+			/*int32_t ***rx_scanner;
+			rx_scanner[s][b]  = (int32_t*)malloc16_clear( (rx_signal[s]->band[b]->n_signal_samples)*sizeof(int32_t) );
+			memcpy((void*)&rx_scanner[s][b][0],(void*)&rx_signal[s]->band[b]->signal_samples,rx_signal[s]->band[b]->n_signal_samples*sizeof(int32_t));
+			write_output(filename,variable,(void*)&rx_scanner[s][b][0],rx_signal[s]->band[b]->n_signal_samples,1,1);*/
+			write_output(filename,variable,(void*)rx_signal[s]->band[b]->signal_samples,rx_signal[s]->band[b]->n_signal_samples,1,1);
+		}
 	}
 }
 

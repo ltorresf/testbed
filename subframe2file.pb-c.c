@@ -142,6 +142,51 @@ void   gps_info__free_unpacked
   assert(message->base.descriptor == &gps_info__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
+void   lte_frame__init
+                     (LteFrame         *message)
+{
+  static const LteFrame init_value = LTE_FRAME__INIT;
+  *message = init_value;
+}
+size_t lte_frame__get_packed_size
+                     (const LteFrame *message)
+{
+  assert(message->base.descriptor == &lte_frame__descriptor);
+  return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
+}
+size_t lte_frame__pack
+                     (const LteFrame *message,
+                      uint8_t       *out)
+{
+  assert(message->base.descriptor == &lte_frame__descriptor);
+  return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
+}
+size_t lte_frame__pack_to_buffer
+                     (const LteFrame *message,
+                      ProtobufCBuffer *buffer)
+{
+  assert(message->base.descriptor == &lte_frame__descriptor);
+  return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
+}
+LteFrame *
+       lte_frame__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data)
+{
+  return (LteFrame *)
+     protobuf_c_message_unpack (&lte_frame__descriptor,
+                                allocator, len, data);
+}
+void   lte_frame__free_unpacked
+                     (LteFrame *message,
+                      ProtobufCAllocator *allocator)
+{
+  if(!message)
+    return;
+  assert(message->base.descriptor == &lte_frame__descriptor);
+  protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
+}
 void   rx_signal__init
                      (RxSignal         *message)
 {
@@ -320,6 +365,51 @@ void   rssi_val__free_unpacked
   if(!message)
     return;
   assert(message->base.descriptor == &rssi_val__descriptor);
+  protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
+}
+void   lte_frame_val__init
+                     (LteFrameVal         *message)
+{
+  static const LteFrameVal init_value = LTE_FRAME_VAL__INIT;
+  *message = init_value;
+}
+size_t lte_frame_val__get_packed_size
+                     (const LteFrameVal *message)
+{
+  assert(message->base.descriptor == &lte_frame_val__descriptor);
+  return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
+}
+size_t lte_frame_val__pack
+                     (const LteFrameVal *message,
+                      uint8_t       *out)
+{
+  assert(message->base.descriptor == &lte_frame_val__descriptor);
+  return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
+}
+size_t lte_frame_val__pack_to_buffer
+                     (const LteFrameVal *message,
+                      ProtobufCBuffer *buffer)
+{
+  assert(message->base.descriptor == &lte_frame_val__descriptor);
+  return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
+}
+LteFrameVal *
+       lte_frame_val__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data)
+{
+  return (LteFrameVal *)
+     protobuf_c_message_unpack (&lte_frame_val__descriptor,
+                                allocator, len, data);
+}
+void   lte_frame_val__free_unpacked
+                     (LteFrameVal *message,
+                      ProtobufCAllocator *allocator)
+{
+  if(!message)
+    return;
+  assert(message->base.descriptor == &lte_frame_val__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
 void   phich_config_common__init
@@ -1114,7 +1204,7 @@ const ProtobufCMessageDescriptor gps_data__descriptor =
   (ProtobufCMessageInit) gps_data__init,
   NULL,NULL,NULL    /* reserved[123] */
 };
-static const ProtobufCFieldDescriptor gps_info__field_descriptors[3] =
+static const ProtobufCFieldDescriptor gps_info__field_descriptors[4] =
 {
   {
     "gps_data",
@@ -1152,16 +1242,30 @@ static const ProtobufCFieldDescriptor gps_info__field_descriptors[3] =
     0,             /* flags */
     0,NULL,NULL    /* reserved1,reserved2, etc */
   },
+  {
+    "lte_frame_container",
+    5,
+    PROTOBUF_C_LABEL_REPEATED,
+    PROTOBUF_C_TYPE_MESSAGE,
+    offsetof(GpsInfo, n_lte_frame_container),
+    offsetof(GpsInfo, lte_frame_container),
+    &lte_frame__descriptor,
+    NULL,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
 };
 static const unsigned gps_info__field_indices_by_name[] = {
   0,   /* field[0] = gps_data */
+  3,   /* field[3] = lte_frame_container */
   1,   /* field[1] = rssi_container */
   2,   /* field[2] = rx_signal */
 };
-static const ProtobufCIntRange gps_info__number_ranges[1 + 1] =
+static const ProtobufCIntRange gps_info__number_ranges[2 + 1] =
 {
   { 1, 0 },
-  { 0, 3 }
+  { 5, 3 },
+  { 0, 4 }
 };
 const ProtobufCMessageDescriptor gps_info__descriptor =
 {
@@ -1171,11 +1275,75 @@ const ProtobufCMessageDescriptor gps_info__descriptor =
   "GpsInfo",
   "",
   sizeof(GpsInfo),
-  3,
+  4,
   gps_info__field_descriptors,
   gps_info__field_indices_by_name,
-  1,  gps_info__number_ranges,
+  2,  gps_info__number_ranges,
   (ProtobufCMessageInit) gps_info__init,
+  NULL,NULL,NULL    /* reserved[123] */
+};
+static const ProtobufCFieldDescriptor lte_frame__field_descriptors[3] =
+{
+  {
+    "frame_band20",
+    1,
+    PROTOBUF_C_LABEL_REPEATED,
+    PROTOBUF_C_TYPE_MESSAGE,
+    offsetof(LteFrame, n_frame_band20),
+    offsetof(LteFrame, frame_band20),
+    &lte_frame_val__descriptor,
+    NULL,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+  {
+    "frame_band3",
+    2,
+    PROTOBUF_C_LABEL_REPEATED,
+    PROTOBUF_C_TYPE_MESSAGE,
+    offsetof(LteFrame, n_frame_band3),
+    offsetof(LteFrame, frame_band3),
+    &lte_frame_val__descriptor,
+    NULL,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+  {
+    "frame_band7",
+    3,
+    PROTOBUF_C_LABEL_REPEATED,
+    PROTOBUF_C_TYPE_MESSAGE,
+    offsetof(LteFrame, n_frame_band7),
+    offsetof(LteFrame, frame_band7),
+    &lte_frame_val__descriptor,
+    NULL,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+};
+static const unsigned lte_frame__field_indices_by_name[] = {
+  0,   /* field[0] = frame_band20 */
+  1,   /* field[1] = frame_band3 */
+  2,   /* field[2] = frame_band7 */
+};
+static const ProtobufCIntRange lte_frame__number_ranges[1 + 1] =
+{
+  { 1, 0 },
+  { 0, 3 }
+};
+const ProtobufCMessageDescriptor lte_frame__descriptor =
+{
+  PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
+  "LteFrame",
+  "LteFrame",
+  "LteFrame",
+  "",
+  sizeof(LteFrame),
+  3,
+  lte_frame__field_descriptors,
+  lte_frame__field_indices_by_name,
+  1,  lte_frame__number_ranges,
+  (ProtobufCMessageInit) lte_frame__init,
   NULL,NULL,NULL    /* reserved[123] */
 };
 static const ProtobufCFieldDescriptor rx_signal__field_descriptors[1] =
@@ -1292,7 +1460,7 @@ const ProtobufCMessageDescriptor rssi_data__descriptor =
   (ProtobufCMessageInit) rssi_data__init,
   NULL,NULL,NULL    /* reserved[123] */
 };
-static const ProtobufCFieldDescriptor rssi_val__field_descriptors[2] =
+static const ProtobufCFieldDescriptor rssi_val__field_descriptors[3] =
 {
   {
     "rssi_val",
@@ -1318,15 +1486,28 @@ static const ProtobufCFieldDescriptor rssi_val__field_descriptors[2] =
     0,             /* flags */
     0,NULL,NULL    /* reserved1,reserved2, etc */
   },
+  {
+    "rx_gain_level",
+    3,
+    PROTOBUF_C_LABEL_REPEATED,
+    PROTOBUF_C_TYPE_DOUBLE,
+    offsetof(RssiVal, n_rx_gain_level),
+    offsetof(RssiVal, rx_gain_level),
+    NULL,
+    NULL,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
 };
 static const unsigned rssi_val__field_indices_by_name[] = {
   1,   /* field[1] = rssi_unix_time */
   0,   /* field[0] = rssi_val */
+  2,   /* field[2] = rx_gain_level */
 };
 static const ProtobufCIntRange rssi_val__number_ranges[1 + 1] =
 {
   { 1, 0 },
-  { 0, 2 }
+  { 0, 3 }
 };
 const ProtobufCMessageDescriptor rssi_val__descriptor =
 {
@@ -1336,11 +1517,62 @@ const ProtobufCMessageDescriptor rssi_val__descriptor =
   "RssiVal",
   "",
   sizeof(RssiVal),
-  2,
+  3,
   rssi_val__field_descriptors,
   rssi_val__field_indices_by_name,
   1,  rssi_val__number_ranges,
   (ProtobufCMessageInit) rssi_val__init,
+  NULL,NULL,NULL    /* reserved[123] */
+};
+static const ProtobufCFieldDescriptor lte_frame_val__field_descriptors[2] =
+{
+  {
+    "lte_frame_samples",
+    1,
+    PROTOBUF_C_LABEL_REPEATED,
+    PROTOBUF_C_TYPE_INT32,
+    offsetof(LteFrameVal, n_lte_frame_samples),
+    offsetof(LteFrameVal, lte_frame_samples),
+    NULL,
+    NULL,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+  {
+    "lte_frame_unix_time",
+    2,
+    PROTOBUF_C_LABEL_REQUIRED,
+    PROTOBUF_C_TYPE_DOUBLE,
+    0,   /* quantifier_offset */
+    offsetof(LteFrameVal, lte_frame_unix_time),
+    NULL,
+    NULL,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+};
+static const unsigned lte_frame_val__field_indices_by_name[] = {
+  0,   /* field[0] = lte_frame_samples */
+  1,   /* field[1] = lte_frame_unix_time */
+};
+static const ProtobufCIntRange lte_frame_val__number_ranges[1 + 1] =
+{
+  { 1, 0 },
+  { 0, 2 }
+};
+const ProtobufCMessageDescriptor lte_frame_val__descriptor =
+{
+  PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
+  "LteFrameVal",
+  "LteFrameVal",
+  "LteFrameVal",
+  "",
+  sizeof(LteFrameVal),
+  2,
+  lte_frame_val__field_descriptors,
+  lte_frame_val__field_indices_by_name,
+  1,  lte_frame_val__number_ranges,
+  (ProtobufCMessageInit) lte_frame_val__init,
   NULL,NULL,NULL    /* reserved[123] */
 };
 static const ProtobufCEnumValue phich_config_common__phich_duration__enum_values_by_number[2] =

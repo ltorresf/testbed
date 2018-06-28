@@ -18,10 +18,12 @@ PROTOBUF_C__BEGIN_DECLS
 typedef struct _GpsFix GpsFix;
 typedef struct _GpsData GpsData;
 typedef struct _GpsInfo GpsInfo;
+typedef struct _LteFrame LteFrame;
 typedef struct _RxSignal RxSignal;
 typedef struct _Band Band;
 typedef struct _RssiData RssiData;
 typedef struct _RssiVal RssiVal;
+typedef struct _LteFrameVal LteFrameVal;
 typedef struct _PhichConfigCommon PhichConfigCommon;
 typedef struct _PhichReg PhichReg;
 typedef struct _Frameparms Frameparms;
@@ -127,10 +129,30 @@ struct  _GpsInfo
   RssiData *rssi_container;
   size_t n_rx_signal;
   RxSignal **rx_signal;
+  /*
+   *repeated double rx_gain = 4;
+   */
+  size_t n_lte_frame_container;
+  LteFrame **lte_frame_container;
 };
 #define GPS_INFO__INIT \
  { PROTOBUF_C_MESSAGE_INIT (&gps_info__descriptor) \
-    , 0,NULL, NULL, 0,NULL }
+    , 0,NULL, NULL, 0,NULL, 0,NULL }
+
+
+struct  _LteFrame
+{
+  ProtobufCMessage base;
+  size_t n_frame_band20;
+  LteFrameVal **frame_band20;
+  size_t n_frame_band3;
+  LteFrameVal **frame_band3;
+  size_t n_frame_band7;
+  LteFrameVal **frame_band7;
+};
+#define LTE_FRAME__INIT \
+ { PROTOBUF_C_MESSAGE_INIT (&lte_frame__descriptor) \
+    , 0,NULL, 0,NULL, 0,NULL }
 
 
 struct  _RxSignal
@@ -172,9 +194,23 @@ struct  _RssiVal
   size_t n_rssi_val;
   double *rssi_val;
   double rssi_unix_time;
+  size_t n_rx_gain_level;
+  double *rx_gain_level;
 };
 #define RSSI_VAL__INIT \
  { PROTOBUF_C_MESSAGE_INIT (&rssi_val__descriptor) \
+    , 0,NULL, 0, 0,NULL }
+
+
+struct  _LteFrameVal
+{
+  ProtobufCMessage base;
+  size_t n_lte_frame_samples;
+  int32_t *lte_frame_samples;
+  double lte_frame_unix_time;
+};
+#define LTE_FRAME_VAL__INIT \
+ { PROTOBUF_C_MESSAGE_INIT (&lte_frame_val__descriptor) \
     , 0,NULL, 0 }
 
 
@@ -635,6 +671,25 @@ GpsInfo *
 void   gps_info__free_unpacked
                      (GpsInfo *message,
                       ProtobufCAllocator *allocator);
+/* LteFrame methods */
+void   lte_frame__init
+                     (LteFrame         *message);
+size_t lte_frame__get_packed_size
+                     (const LteFrame   *message);
+size_t lte_frame__pack
+                     (const LteFrame   *message,
+                      uint8_t             *out);
+size_t lte_frame__pack_to_buffer
+                     (const LteFrame   *message,
+                      ProtobufCBuffer     *buffer);
+LteFrame *
+       lte_frame__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data);
+void   lte_frame__free_unpacked
+                     (LteFrame *message,
+                      ProtobufCAllocator *allocator);
 /* RxSignal methods */
 void   rx_signal__init
                      (RxSignal         *message);
@@ -710,6 +765,25 @@ RssiVal *
                       const uint8_t       *data);
 void   rssi_val__free_unpacked
                      (RssiVal *message,
+                      ProtobufCAllocator *allocator);
+/* LteFrameVal methods */
+void   lte_frame_val__init
+                     (LteFrameVal         *message);
+size_t lte_frame_val__get_packed_size
+                     (const LteFrameVal   *message);
+size_t lte_frame_val__pack
+                     (const LteFrameVal   *message,
+                      uint8_t             *out);
+size_t lte_frame_val__pack_to_buffer
+                     (const LteFrameVal   *message,
+                      ProtobufCBuffer     *buffer);
+LteFrameVal *
+       lte_frame_val__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data);
+void   lte_frame_val__free_unpacked
+                     (LteFrameVal *message,
                       ProtobufCAllocator *allocator);
 /* PhichConfigCommon methods */
 void   phich_config_common__init
@@ -912,6 +986,9 @@ typedef void (*GpsData_Closure)
 typedef void (*GpsInfo_Closure)
                  (const GpsInfo *message,
                   void *closure_data);
+typedef void (*LteFrame_Closure)
+                 (const LteFrame *message,
+                  void *closure_data);
 typedef void (*RxSignal_Closure)
                  (const RxSignal *message,
                   void *closure_data);
@@ -923,6 +1000,9 @@ typedef void (*RssiData_Closure)
                   void *closure_data);
 typedef void (*RssiVal_Closure)
                  (const RssiVal *message,
+                  void *closure_data);
+typedef void (*LteFrameVal_Closure)
+                 (const LteFrameVal *message,
                   void *closure_data);
 typedef void (*PhichConfigCommon_Closure)
                  (const PhichConfigCommon *message,
@@ -964,10 +1044,12 @@ extern const ProtobufCMessageDescriptor gps_fix__descriptor;
 extern const ProtobufCEnumDescriptor    gps_fix__mode__descriptor;
 extern const ProtobufCMessageDescriptor gps_data__descriptor;
 extern const ProtobufCMessageDescriptor gps_info__descriptor;
+extern const ProtobufCMessageDescriptor lte_frame__descriptor;
 extern const ProtobufCMessageDescriptor rx_signal__descriptor;
 extern const ProtobufCMessageDescriptor band__descriptor;
 extern const ProtobufCMessageDescriptor rssi_data__descriptor;
 extern const ProtobufCMessageDescriptor rssi_val__descriptor;
+extern const ProtobufCMessageDescriptor lte_frame_val__descriptor;
 extern const ProtobufCMessageDescriptor phich_config_common__descriptor;
 extern const ProtobufCEnumDescriptor    phich_config_common__phich_duration__descriptor;
 extern const ProtobufCEnumDescriptor    phich_config_common__phich_resource__descriptor;
