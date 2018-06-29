@@ -50,7 +50,7 @@ message GpsData {
 
 message GpsInfo {
 	repeated GpsData gps_data = 1;
-	required RssiData rssi_container = 2;
+	repeated RssiData rssi_container = 2;
 	repeated RxSignal rx_signal = 3;
 	//repeated double rx_gain = 4;
 	repeated LteFrame lte_frame_container = 5;

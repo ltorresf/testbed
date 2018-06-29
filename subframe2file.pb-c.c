@@ -1221,9 +1221,9 @@ static const ProtobufCFieldDescriptor gps_info__field_descriptors[4] =
   {
     "rssi_container",
     2,
-    PROTOBUF_C_LABEL_REQUIRED,
+    PROTOBUF_C_LABEL_REPEATED,
     PROTOBUF_C_TYPE_MESSAGE,
-    0,   /* quantifier_offset */
+    offsetof(GpsInfo, n_rssi_container),
     offsetof(GpsInfo, rssi_container),
     &rssi_data__descriptor,
     NULL,

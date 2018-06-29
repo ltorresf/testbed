@@ -126,7 +126,8 @@ struct  _GpsInfo
   ProtobufCMessage base;
   size_t n_gps_data;
   GpsData **gps_data;
-  RssiData *rssi_container;
+  size_t n_rssi_container;
+  RssiData **rssi_container;
   size_t n_rx_signal;
   RxSignal **rx_signal;
   /*
@@ -137,7 +138,7 @@ struct  _GpsInfo
 };
 #define GPS_INFO__INIT \
  { PROTOBUF_C_MESSAGE_INIT (&gps_info__descriptor) \
-    , 0,NULL, NULL, 0,NULL, 0,NULL }
+    , 0,NULL, 0,NULL, 0,NULL, 0,NULL }
 
 
 struct  _LteFrame
