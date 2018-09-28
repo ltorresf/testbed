@@ -12,13 +12,19 @@
 unsigned int max_msg_size = 40192121;
 #define BAND_AVERAGES 0
 #define BAND_SCAN 1
-#define MATLAB 0
+#define ARCGIS_OUTPUT 0
+#define MATLAB_OUTPUT 1
+#define SHIFT 120	//value added to the signal strength for easing plotting the values in Arcgis. The relationship between measurements is maintained.
 
 void dump_gps_data(GpsData **gps_data,int n_data);
 void dump_rxpwrlvl_data(RssiData *rssi_data);
 void dump_rxpwrlvl_gps(GpsData **gps_data,RssiData **rssi_container,GpsInfo *msg);
 void arcgis_input_generator(GpsInfo *msg);
+void dump_signals_to_matlab(GpsInfo *gps_info, int file_id);
 extern int write_output(const char *fname,const char *vname,void *data,int length,int dec,char format);
+
+double rx_gains[3][10000];	//max: 10,000 input files
+int cnt=0;
 
 //! \brief Allocate \c size bytes of memory on the heap with alignment 16 and zero it afterwards.
 //! If no more memory is available, this function will terminate the program with an assertion error.
@@ -65,13 +71,16 @@ int main (int argc, const char * argv[])
   size_t len=0;
   ssize_t read;
   int counter=0;
+  double *rx_gain_b20;
 
   //list_filenames = fopen("/home/ltorresf/src/scanner_OAI_HetNet/cmake_targets/lte_build_oai/build/list","r");
   list_filenames = fopen(argv[1],"r");
   if (list_filenames == NULL)
 	  exit(-1);
 
+#if ARCGIS_OUTPUT
   printf("timestamp,latitude,longitude,speed,LTE band 20,LTE band 3,LTE band 7\n");
+#endif
 
   while ((read = getline(&filename, &len, list_filenames)) != -1) {
       //printf("Processing: %s", filename);
@@ -101,11 +110,13 @@ int main (int argc, const char * argv[])
       GpsData **gps_data = msg->gps_data;
       RssiData **rssi_container = msg->rssi_container;
 
-      //dump_gps_data(gps_data,msg->n_gps_data);
-      //dump_rxpwrlvl_data(rssi_container);
-      dump_rxpwrlvl_gps(gps_data,rssi_container,msg);
+      /*dump_gps_data(gps_data,msg->n_gps_data);
+      dump_rxpwrlvl_data(rssi_container);*/
 
-      //arcgis_input_generator(msg); //FIXME: incongruent values with last update
+      //dump_rxpwrlvl_gps(gps_data,rssi_container,msg);
+      dump_signals_to_matlab(msg, counter);
+
+      //arcgis_input_generator(msg);
 
       // Free the unpacked message
       gps_info__free_unpacked(msg, NULL);
@@ -113,7 +124,11 @@ int main (int argc, const char * argv[])
 
       counter++;
   }
-  printf("%d files processed\n",counter);
+  //printf("%d files processed\n",counter);
+  rx_gain_b20 = malloc(sizeof(double)*cnt);
+  memcpy((void*)rx_gain_b20,(void*)&rx_gains[0][0],sizeof(double)*cnt);
+  write_output("rx_gain_b20.m","rx_gains",(void*)rx_gain_b20,cnt,1,7);
+
 
   //closing file containing list of files to process
   fclose(list_filenames);
@@ -139,7 +154,8 @@ void arcgis_input_generator(GpsInfo *gps_info) {
 	  //printf("timestamp,latitude,longitude,speed,LTEband20,LTEband3,LTEband7\n");
 
 	//Only the RSSI samples that contain data are processed
-	while (rssi_container[0]->rssi_data[rssi_cnt]->rssi_unix_time > 1) {
+	//while (rssi_container[0]->rssi_data[rssi_cnt]->rssi_unix_time > 1) {
+	for (rssi_cnt = 0; rssi_cnt < rssi_container[0]->n_rssi_data; rssi_cnt++) {
 
 		//printf("|| RSSI Sample No %d, RSSI Unix Timestamp: %.3f ",rssi_cnt,rssi_container->rssi_data[rssi_cnt]->rssi_unix_time);
 
@@ -156,24 +172,36 @@ void arcgis_input_generator(GpsInfo *gps_info) {
 
 		//printf("|| GPS Sample No %d, GPS Unix Timestamp = %.3f >> Time diff = %.3f || GPS Timestamp = %.3lf ||\n",gps_ix,gps_data[gps_ix]->gps_unix_time,tmp,gps_data[gps_ix]->gps_fix->time);
 
-#ifdef BAND_SCAN		//ArcGIS: latest. the Rx signal level for the band is calculated in C
+#if ARCGIS_OUTPUT		//ArcGIS: latest. the Rx signal level for the band is calculated in C
 
 		//printing out GPS data
-		frac_time = modf(gps_data[gps_ix]->gps_fix->time,&tmp2);
+		frac_time = modf(gps_data[gps_ix]->gps_fix->time,&tmp2);	//the time provided by the GPS is used
 		snprintf(frac_buf, 10, "%f\n", frac_time);
 		int_time = tmp2;
 
 		ts = *localtime(&int_time);
 		strftime(timestamp_buf, sizeof(timestamp_buf), "%a %Y-%m-%d %H:%M:%S", &ts);
 		strftime(timestamp_buf2, sizeof(timestamp_buf2), "%Z", &ts);
-		printf("%s.%c %s,%.6f,%.6f,%.1f km/h,",timestamp_buf,frac_buf[2],timestamp_buf2,gps_data[gps_ix]->gps_fix->latitude,gps_data[gps_ix]->gps_fix->longitude,18*(gps_data[gps_ix]->gps_fix->speed)/5);
+		printf("%s.%c %s,%.6f,%.6f,%.1f km/h,",timestamp_buf,frac_buf[2],timestamp_buf2,gps_data[gps_ix]->gps_fix->latitude,gps_data[gps_ix]->gps_fix->longitude,18*(gps_data[gps_ix]->gps_fix->speed)/5);	//LA: print time as text
 
 		//printing out RSSI data (in dB) -> B20, B3, B7
-		printf("%.1f,%.1f,%.1f\n",rssi_container[0]->rssi_data[rssi_cnt]->rssi_val[0],rssi_container[0]->rssi_data[rssi_cnt]->rssi_val[1],rssi_container[0]->rssi_data[rssi_cnt]->rssi_val[2]);
+		printf("%.1f,%.1f,%.1f\n",
+				rssi_container[0]->rssi_data[rssi_cnt]->rssi_val[0] - rssi_container[0]->rssi_data[rssi_cnt]->rx_gain_level[0] + SHIFT,
+				rssi_container[0]->rssi_data[rssi_cnt]->rssi_val[1] - rssi_container[0]->rssi_data[rssi_cnt]->rx_gain_level[1] + SHIFT,
+				rssi_container[0]->rssi_data[rssi_cnt]->rssi_val[2] - rssi_container[0]->rssi_data[rssi_cnt]->rx_gain_level[2] + SHIFT);
+#endif
+
+#if MATLAB_OUTPUT
+
+		//printing out GPS and RSSI data (in dB) -> B20, B3, B7
+		printf("%.1f,%.1f,%.1f,%.1f\n",gps_data[gps_ix]->gps_fix->time,
+				rssi_container[0]->rssi_data[rssi_cnt]->rssi_val[0] - rssi_container[0]->rssi_data[rssi_cnt]->rx_gain_level[0],
+				rssi_container[0]->rssi_data[rssi_cnt]->rssi_val[1] - rssi_container[0]->rssi_data[rssi_cnt]->rx_gain_level[1],
+				rssi_container[0]->rssi_data[rssi_cnt]->rssi_val[2] - rssi_container[0]->rssi_data[rssi_cnt]->rx_gain_level[2]);
 #endif
 
 
-#ifdef BAND_AVERAGES		//ArcGIS: 5-MHz channels are used for calculating the Rx Signal level
+#if BAND_AVERAGES		//ArcGIS: 5-MHz channels are used for calculating the Rx Signal level
 
 		//printing out GPS data
 		frac_time = modf(gps_data[gps_ix]->gps_fix->time,&tmp2);
@@ -201,7 +229,7 @@ void arcgis_input_generator(GpsInfo *gps_info) {
 		printf("%.1f,%.1f,%.1f\n",b20/2,b3/4,b7/4);
 #endif
 
-#ifdef MATLAB	//MATLAB
+#if MATLAB	//MATLAB
 
 		//printing out GPS data
 		printf("%.1f,%.6f,%.6f,%.1f,",gps_data[gps_ix]->gps_fix->time,gps_data[gps_ix]->gps_fix->latitude,gps_data[gps_ix]->gps_fix->longitude,gps_data[gps_ix]->gps_fix->speed);
@@ -217,7 +245,7 @@ void arcgis_input_generator(GpsInfo *gps_info) {
 
 #endif
 
-		rssi_cnt++;
+		//rssi_cnt++;
 	}
 }
 
@@ -293,4 +321,20 @@ void dump_rxpwrlvl_data(RssiData *rssi_container) {
 		printf("\n");
 	}
 
+}
+
+void dump_signals_to_matlab(GpsInfo *gps_info, int file_id) {
+	RxSignal **rx_signal = gps_info->rx_signal;
+	char filename[50],variable[50];
+
+	//creating MATLAB files that contain time-domain signals
+	for (int s=0; s<gps_info->n_rx_signal; s++) {
+		for(int freq_id=0;freq_id<rx_signal[s]->n_band;freq_id++){
+			snprintf(filename,50,"%s%d%s%d%s%d%s","file_",file_id,"_rx_signal",s+1,"_band_",freq_id+1,".m");
+			//snprintf(variable,50,"%s%d%s%d","rx_signal",s+1,"_b_",b+1);
+			write_output(filename,"rx_signal",(void*)rx_signal[s]->band[freq_id]->signal_samples,rx_signal[s]->band[freq_id]->n_signal_samples,1,1);
+			rx_gains[freq_id][cnt] = gps_info->rssi_container[0]->rssi_data[s]->rx_gain_level[freq_id];
+		}
+		cnt++;
+	}
 }

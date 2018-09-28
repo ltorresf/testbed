@@ -18,6 +18,7 @@ PROTOBUF_C__BEGIN_DECLS
 typedef struct _GpsFix GpsFix;
 typedef struct _GpsData GpsData;
 typedef struct _GpsInfo GpsInfo;
+typedef struct _LTEInfo LTEInfo;
 typedef struct _LteFrame LteFrame;
 typedef struct _RxSignal RxSignal;
 typedef struct _Band Band;
@@ -128,17 +129,26 @@ struct  _GpsInfo
   GpsData **gps_data;
   size_t n_rssi_container;
   RssiData **rssi_container;
-  size_t n_rx_signal;
-  RxSignal **rx_signal;
   /*
    *repeated double rx_gain = 4;
    */
-  size_t n_lte_frame_container;
-  LteFrame **lte_frame_container;
+  size_t n_rx_signal;
+  RxSignal **rx_signal;
 };
 #define GPS_INFO__INIT \
  { PROTOBUF_C_MESSAGE_INIT (&gps_info__descriptor) \
-    , 0,NULL, 0,NULL, 0,NULL, 0,NULL }
+    , 0,NULL, 0,NULL, 0,NULL }
+
+
+struct  _LTEInfo
+{
+  ProtobufCMessage base;
+  size_t n_lte_frame_container;
+  LteFrame **lte_frame_container;
+};
+#define LTEINFO__INIT \
+ { PROTOBUF_C_MESSAGE_INIT (&lteinfo__descriptor) \
+    , 0,NULL }
 
 
 struct  _LteFrame
@@ -209,10 +219,12 @@ struct  _LteFrameVal
   size_t n_lte_frame_samples;
   int32_t *lte_frame_samples;
   double lte_frame_unix_time;
+  int32_t lte_frame_drop_label;
+  double lte_frame_rx_gain;
 };
 #define LTE_FRAME_VAL__INIT \
  { PROTOBUF_C_MESSAGE_INIT (&lte_frame_val__descriptor) \
-    , 0,NULL, 0 }
+    , 0,NULL, 0, 0, 0 }
 
 
 struct  _PhichConfigCommon
@@ -672,6 +684,25 @@ GpsInfo *
 void   gps_info__free_unpacked
                      (GpsInfo *message,
                       ProtobufCAllocator *allocator);
+/* LTEInfo methods */
+void   lteinfo__init
+                     (LTEInfo         *message);
+size_t lteinfo__get_packed_size
+                     (const LTEInfo   *message);
+size_t lteinfo__pack
+                     (const LTEInfo   *message,
+                      uint8_t             *out);
+size_t lteinfo__pack_to_buffer
+                     (const LTEInfo   *message,
+                      ProtobufCBuffer     *buffer);
+LTEInfo *
+       lteinfo__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data);
+void   lteinfo__free_unpacked
+                     (LTEInfo *message,
+                      ProtobufCAllocator *allocator);
 /* LteFrame methods */
 void   lte_frame__init
                      (LteFrame         *message);
@@ -987,6 +1018,9 @@ typedef void (*GpsData_Closure)
 typedef void (*GpsInfo_Closure)
                  (const GpsInfo *message,
                   void *closure_data);
+typedef void (*LTEInfo_Closure)
+                 (const LTEInfo *message,
+                  void *closure_data);
 typedef void (*LteFrame_Closure)
                  (const LteFrame *message,
                   void *closure_data);
@@ -1045,6 +1079,7 @@ extern const ProtobufCMessageDescriptor gps_fix__descriptor;
 extern const ProtobufCEnumDescriptor    gps_fix__mode__descriptor;
 extern const ProtobufCMessageDescriptor gps_data__descriptor;
 extern const ProtobufCMessageDescriptor gps_info__descriptor;
+extern const ProtobufCMessageDescriptor lteinfo__descriptor;
 extern const ProtobufCMessageDescriptor lte_frame__descriptor;
 extern const ProtobufCMessageDescriptor rx_signal__descriptor;
 extern const ProtobufCMessageDescriptor band__descriptor;

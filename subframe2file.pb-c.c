@@ -142,6 +142,51 @@ void   gps_info__free_unpacked
   assert(message->base.descriptor == &gps_info__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
+void   lteinfo__init
+                     (LTEInfo         *message)
+{
+  static const LTEInfo init_value = LTEINFO__INIT;
+  *message = init_value;
+}
+size_t lteinfo__get_packed_size
+                     (const LTEInfo *message)
+{
+  assert(message->base.descriptor == &lteinfo__descriptor);
+  return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
+}
+size_t lteinfo__pack
+                     (const LTEInfo *message,
+                      uint8_t       *out)
+{
+  assert(message->base.descriptor == &lteinfo__descriptor);
+  return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
+}
+size_t lteinfo__pack_to_buffer
+                     (const LTEInfo *message,
+                      ProtobufCBuffer *buffer)
+{
+  assert(message->base.descriptor == &lteinfo__descriptor);
+  return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
+}
+LTEInfo *
+       lteinfo__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data)
+{
+  return (LTEInfo *)
+     protobuf_c_message_unpack (&lteinfo__descriptor,
+                                allocator, len, data);
+}
+void   lteinfo__free_unpacked
+                     (LTEInfo *message,
+                      ProtobufCAllocator *allocator)
+{
+  if(!message)
+    return;
+  assert(message->base.descriptor == &lteinfo__descriptor);
+  protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
+}
 void   lte_frame__init
                      (LteFrame         *message)
 {
@@ -1204,7 +1249,7 @@ const ProtobufCMessageDescriptor gps_data__descriptor =
   (ProtobufCMessageInit) gps_data__init,
   NULL,NULL,NULL    /* reserved[123] */
 };
-static const ProtobufCFieldDescriptor gps_info__field_descriptors[4] =
+static const ProtobufCFieldDescriptor gps_info__field_descriptors[3] =
 {
   {
     "gps_data",
@@ -1242,30 +1287,16 @@ static const ProtobufCFieldDescriptor gps_info__field_descriptors[4] =
     0,             /* flags */
     0,NULL,NULL    /* reserved1,reserved2, etc */
   },
-  {
-    "lte_frame_container",
-    5,
-    PROTOBUF_C_LABEL_REPEATED,
-    PROTOBUF_C_TYPE_MESSAGE,
-    offsetof(GpsInfo, n_lte_frame_container),
-    offsetof(GpsInfo, lte_frame_container),
-    &lte_frame__descriptor,
-    NULL,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
 };
 static const unsigned gps_info__field_indices_by_name[] = {
   0,   /* field[0] = gps_data */
-  3,   /* field[3] = lte_frame_container */
   1,   /* field[1] = rssi_container */
   2,   /* field[2] = rx_signal */
 };
-static const ProtobufCIntRange gps_info__number_ranges[2 + 1] =
+static const ProtobufCIntRange gps_info__number_ranges[1 + 1] =
 {
   { 1, 0 },
-  { 5, 3 },
-  { 0, 4 }
+  { 0, 3 }
 };
 const ProtobufCMessageDescriptor gps_info__descriptor =
 {
@@ -1275,11 +1306,49 @@ const ProtobufCMessageDescriptor gps_info__descriptor =
   "GpsInfo",
   "",
   sizeof(GpsInfo),
-  4,
+  3,
   gps_info__field_descriptors,
   gps_info__field_indices_by_name,
-  2,  gps_info__number_ranges,
+  1,  gps_info__number_ranges,
   (ProtobufCMessageInit) gps_info__init,
+  NULL,NULL,NULL    /* reserved[123] */
+};
+static const ProtobufCFieldDescriptor lteinfo__field_descriptors[1] =
+{
+  {
+    "lte_frame_container",
+    1,
+    PROTOBUF_C_LABEL_REPEATED,
+    PROTOBUF_C_TYPE_MESSAGE,
+    offsetof(LTEInfo, n_lte_frame_container),
+    offsetof(LTEInfo, lte_frame_container),
+    &lte_frame__descriptor,
+    NULL,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+};
+static const unsigned lteinfo__field_indices_by_name[] = {
+  0,   /* field[0] = lte_frame_container */
+};
+static const ProtobufCIntRange lteinfo__number_ranges[1 + 1] =
+{
+  { 1, 0 },
+  { 0, 1 }
+};
+const ProtobufCMessageDescriptor lteinfo__descriptor =
+{
+  PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
+  "LTEInfo",
+  "LTEInfo",
+  "LTEInfo",
+  "",
+  sizeof(LTEInfo),
+  1,
+  lteinfo__field_descriptors,
+  lteinfo__field_indices_by_name,
+  1,  lteinfo__number_ranges,
+  (ProtobufCMessageInit) lteinfo__init,
   NULL,NULL,NULL    /* reserved[123] */
 };
 static const ProtobufCFieldDescriptor lte_frame__field_descriptors[3] =
@@ -1524,7 +1593,7 @@ const ProtobufCMessageDescriptor rssi_val__descriptor =
   (ProtobufCMessageInit) rssi_val__init,
   NULL,NULL,NULL    /* reserved[123] */
 };
-static const ProtobufCFieldDescriptor lte_frame_val__field_descriptors[2] =
+static const ProtobufCFieldDescriptor lte_frame_val__field_descriptors[4] =
 {
   {
     "lte_frame_samples",
@@ -1550,15 +1619,41 @@ static const ProtobufCFieldDescriptor lte_frame_val__field_descriptors[2] =
     0,             /* flags */
     0,NULL,NULL    /* reserved1,reserved2, etc */
   },
+  {
+    "lte_frame_drop_label",
+    3,
+    PROTOBUF_C_LABEL_REQUIRED,
+    PROTOBUF_C_TYPE_INT32,
+    0,   /* quantifier_offset */
+    offsetof(LteFrameVal, lte_frame_drop_label),
+    NULL,
+    NULL,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+  {
+    "lte_frame_rx_gain",
+    4,
+    PROTOBUF_C_LABEL_REQUIRED,
+    PROTOBUF_C_TYPE_DOUBLE,
+    0,   /* quantifier_offset */
+    offsetof(LteFrameVal, lte_frame_rx_gain),
+    NULL,
+    NULL,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
 };
 static const unsigned lte_frame_val__field_indices_by_name[] = {
+  2,   /* field[2] = lte_frame_drop_label */
+  3,   /* field[3] = lte_frame_rx_gain */
   0,   /* field[0] = lte_frame_samples */
   1,   /* field[1] = lte_frame_unix_time */
 };
 static const ProtobufCIntRange lte_frame_val__number_ranges[1 + 1] =
 {
   { 1, 0 },
-  { 0, 2 }
+  { 0, 4 }
 };
 const ProtobufCMessageDescriptor lte_frame_val__descriptor =
 {
@@ -1568,7 +1663,7 @@ const ProtobufCMessageDescriptor lte_frame_val__descriptor =
   "LteFrameVal",
   "",
   sizeof(LteFrameVal),
-  2,
+  4,
   lte_frame_val__field_descriptors,
   lte_frame_val__field_indices_by_name,
   1,  lte_frame_val__number_ranges,

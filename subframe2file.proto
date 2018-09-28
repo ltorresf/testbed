@@ -53,7 +53,11 @@ message GpsInfo {
 	repeated RssiData rssi_container = 2;
 	repeated RxSignal rx_signal = 3;
 	//repeated double rx_gain = 4;
-	repeated LteFrame lte_frame_container = 5;
+}
+
+message LTEInfo {
+	repeated LteFrame lte_frame_container = 1;
+
 }
 
 message LteFrame {
@@ -83,6 +87,8 @@ message RssiVal {
 message LteFrameVal {
 	repeated int32 lte_frame_samples = 1;
 	required double lte_frame_unix_time = 2;
+	required int32 lte_frame_drop_label = 3;
+	required double lte_frame_rx_gain = 4;
 }
 
 message PhichConfigCommon {
